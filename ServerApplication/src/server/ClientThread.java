@@ -9,6 +9,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -46,13 +47,14 @@ public class ClientThread implements Runnable {
 				}
 				
 				for (ClientThread ct : ServerApplication.clients) {
-					if(ct.isOnline) {
-						ct.out.writeUTF("Client-" + clientID + line);
+					if(ct.isOnline && ct.clientID != this.clientID) {
+						ct.out.writeUTF("Client-" + clientID + ": " + line);
 						System.out.println("Sent message to Client-" + ct.clientID);
 					}
 				}
 				
-				
+                        } catch (SocketException se) {
+                                System.out.println("Client-" + clientID + " disconnected");
 			} catch (EOFException eofe) {
 				System.out.println("Client-" + clientID + " disconnected");
 				break;

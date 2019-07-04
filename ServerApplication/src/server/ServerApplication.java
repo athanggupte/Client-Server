@@ -78,5 +78,13 @@ public class ServerApplication {
 		
 		
 	}
-	
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        socket.close();
+        server.close();
+    }
+        
+        
 }
