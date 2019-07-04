@@ -19,53 +19,46 @@ import java.util.logging.Logger;
  */
 public class ClientApplicaton {
 
+        Socket socket;
+
+    public ClientApplicaton(Socket socket) {
+        this.socket = socket;
+    }
+        
+    public void startService() throws IOException {
+	DataInputStream in = null;
+	DataOutputStream out = null;
+        
+        in = new DataInputStream(socket.getInputStream());
+        out = new DataOutputStream(socket.getOutputStream());
+                       
+        new Thread(new ReceiverThread(in)).start();
+        new Thread(new SenderThread(out)).start();
+    }
+    
 	/**
 	 * @param args the command line arguments
 	 */
-	public static void main(String[] args) {
-		Socket socket = null;
-		DataInputStream input = null;
-		DataInputStream in = null;
-		DataOutputStream out = null;
-		
-		try {
-			socket = new Socket("127.0.0.1", 12345);
-			System.out.println("Connected");
-			
-			input = new DataInputStream(System.in);
-			in = new DataInputStream(socket.getInputStream());
-			out = new DataOutputStream(socket.getOutputStream());
-			
-		} catch (UnknownHostException ue) {
-			Logger.getLogger(ClientApplicaton.class.getName()).log(Level.SEVERE, null, ue);
-		}catch (IOException ioe) {
-			Logger.getLogger(ClientApplicaton.class.getName()).log(Level.SEVERE, null, ioe);
-		}
-		
-		String line = "";
-		
-		while(!line.equalsIgnoreCase("EXIT")){
-			try {
-				
-				System.out.println(in.readUTF());
-				
-				System.out.println("You: ");
-				line = input.readLine();
-				out.writeUTF(line);
-				
-			} catch (IOException ioe) {
-				Logger.getLogger(ClientApplicaton.class.getName()).log(Level.SEVERE, null, ioe);
-			}
-		}
-		
-		try {
-			input.close();
-			out.close();
-			socket.close();
-		} catch (IOException ioe) {
-				Logger.getLogger(ClientApplicaton.class.getName()).log(Level.SEVERE, null, ioe);
-		}
-		
-	}
+    public static void main(String[] args) {
 	
+	try {
+            ClientApplicaton client = new ClientApplicaton(new Socket("10.10.12.194", 12345));
+            System.out.println("Connected");
+			
+            client.startService();
+            
+	} catch (UnknownHostException ue) {
+            Logger.getLogger(ClientApplicaton.class.getName()).log(Level.SEVERE, null, ue);
+	}catch (IOException ioe) {
+            Logger.getLogger(ClientApplicaton.class.getName()).log(Level.SEVERE, null, ioe);
+	}		
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        socket.close();
+    }
+	
+    
 }
