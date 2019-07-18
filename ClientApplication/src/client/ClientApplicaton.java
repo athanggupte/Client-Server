@@ -42,7 +42,7 @@ public class ClientApplicaton {
     public static void main(String[] args) {
 	
 	try {
-            ClientApplicaton client = new ClientApplicaton(new Socket("10.10.12.194", 12345));
+            ClientApplicaton client = new ClientApplicaton(new Socket("localhost", 12345));
             System.out.println("Connected");
 			
             client.startService();
