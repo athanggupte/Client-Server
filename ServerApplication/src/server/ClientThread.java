@@ -34,34 +34,59 @@ public class ClientThread implements Runnable {
 	
 	@Override
 	public void run() {
-		
-		String line;
 		while(true) {
-			
-			try {
-				line = in.readUTF();
-				System.out.println("Client-" + clientID + ": " + line);
-				if(line.equalsIgnoreCase("EXIT")) {
-					this.isOnline = false;
-					break;
-				}
-				
-				for (ClientThread ct : ServerApplication.clients) {
-					if(ct.isOnline && ct.clientID != this.clientID) {
-						ct.out.writeUTF("Client-" + clientID + ": " + line);
-						System.out.println("Sent message to Client-" + ct.clientID);
-					}
-				}
-				
-                        } catch (SocketException se) {
-                                System.out.println("Client-" + clientID + " disconnected");
-			} catch (EOFException eofe) {
-				System.out.println("Client-" + clientID + " disconnected");
-				break;
-			} catch (IOException ex) {
-				Logger.getLogger(ClientThread.class.getName()).log(Level.SEVERE, null, ex);
-				break;
+                    boolean isFtp = false;
+                    int bytesRead = 0;
+                    try {
+                    	String line = in.readUTF();
+                    	System.out.println("Client-" + clientID + ": " + line);
+                    	if(line.equalsIgnoreCase("EXIT")) {
+                            this.isOnline = false;
+                            break;
 			}
+			if (line.equals("ftp")) {
+                            String name = in.readUTF();
+                            isFtp = true;
+                            byte[] byteArray = new byte[256];
+                            
+                            long totBytesRead = 0;
+                            long fileLength = in.readLong();
+                            for (ClientThread ct : ServerApplication.clients) {
+				if(ct.isOnline && ct.clientID != this.clientID) {
+                                    ct.out.writeUTF("ftp");
+                                    ct.out.writeUTF(name);
+                                    ct.out.writeLong(fileLength);
+                                    System.out.println("Sending file to Client-" + ct.clientID);
+				}
+                            }
+                            while(totBytesRead < fileLength && (bytesRead = in.read(byteArray, 0, byteArray.length)) != -1){
+                                totBytesRead += bytesRead;
+                                for (ClientThread ct : ServerApplication.clients) {
+                                    if(ct.isOnline && ct.clientID != this.clientID) {
+                                        ct.out.write(byteArray, 0, bytesRead);
+                                        System.out.println("Sent " + bytesRead + " bytes to Client-" + ct.clientID);
+                                        ct.out.flush();
+                                    }
+                                }
+                            }
+                        } else {
+                            for (ClientThread ct : ServerApplication.clients) {
+				if(ct.isOnline && ct.clientID != this.clientID) {
+                                    ct.out.writeUTF("Client-" + clientID + ": " + line);
+                                    System.out.println("Sent message to Client-" + ct.clientID);
+				}
+                            }
+                        }
+				
+                    } catch (SocketException se) {
+                        System.out.println("Client-" + clientID + " disconnected");
+                    } catch (EOFException eofe) {
+			System.out.println("Client-" + clientID + " disconnected");
+			break;
+                    } catch (IOException ex) {
+			Logger.getLogger(ClientThread.class.getName()).log(Level.SEVERE, null, ex);
+			break;
+                    }
 			
 		}
 		
